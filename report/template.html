@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="PhantomTrace OSINT Footprint Report — automated open-source intelligence gathering results." />
+    <title>PhantomTrace — OSINT Report</title>
+    <style>
+      /* ===== RESET & BASE ===== */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        color-scheme: dark;
+        --bg-base: #06080d;
+        --bg-surface: #0d1117;
+        --bg-card: #131820;
+        --bg-card-hover: #181e28;
+        --border: #1e2633;
+        --border-glow: #253040;
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --text-muted: #6e7681;
+        --accent-cyan: #58a6ff;
+        --accent-purple: #a78bfa;
+        --green: #22c55e;
+        --green-bg: rgba(34,197,94,0.12);
+        --green-border: rgba(34,197,94,0.25);
+        --red: #ef4444;
+        --red-bg: rgba(239,68,68,0.12);
+        --red-border: rgba(239,68,68,0.25);
+        --yellow: #eab308;
+        --yellow-bg: rgba(234,179,8,0.12);
+        --yellow-border: rgba(234,179,8,0.25);
+        --amber: #f59e0b;
+        --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'SF Mono', 'Consolas', monospace;
+        --radius-sm: 6px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-pill: 999px;
+        --shadow-card: 0 4px 24px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
+        --shadow-glow: 0 0 40px rgba(88,166,255,0.06);
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body {
+        background: var(--bg-base);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* ===== BACKGROUND GRID EFFECT ===== */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(88,166,255,0.08), transparent),
+          radial-gradient(ellipse 60% 40% at 80% 110%, rgba(167,139,250,0.06), transparent);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page-wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      /* ===== HEADER ===== */
+      .report-header {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-card);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .report-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-cyan));
+        background-size: 200% 100%;
+        animation: shimmer 3s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%, 100% { background-position: 0% 0; }
+        50% { background-position: 200% 0; }
+      }
+
+      .header-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-icon {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .brand h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .edu-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--amber);
+        background: var(--yellow-bg);
+        border: 1px solid var(--yellow-border);
+        border-radius: var(--radius-pill);
+        white-space: nowrap;
+      }
+
+      .target-name {
+        font-family: var(--font-mono);
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: var(--accent-cyan);
+        padding: 8px 0;
+        word-break: break-all;
+      }
+
+      .timestamp {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+      }
+
+      /* ===== SUMMARY BAR ===== */
+      .summary-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 18px 20px;
+        text-align: center;
+        box-shadow: var(--shadow-card);
+        transition: border-color var(--transition), transform var(--transition);
+      }
+
+      .stat-card:hover {
+        border-color: var(--border-glow);
+        transform: translateY(-2px);
+      }
+
+      .stat-value {
+        font-family: var(--font-mono);
+        font-size: 1.8rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .stat-value.accent { color: var(--accent-cyan); }
+      .stat-value.green { color: var(--green); }
+      .stat-value.red { color: var(--red); }
+      .stat-value.yellow { color: var(--yellow); }
+      .stat-value.muted { color: var(--text-secondary); }
+
+      .stat-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-weight: 500;
+      }
+
+      /* ===== SECTION CARDS ===== */
+      .section-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        transition: border-color var(--transition);
+      }
+
+      .section-card:hover {
+        border-color: var(--border-glow);
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255,255,255,0.01);
+      }
+
+      .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+
+      .section-icon.cyan { background: rgba(88,166,255,0.12); }
+      .section-icon.purple { background: rgba(167,139,250,0.12); }
+      .section-icon.green-bg { background: var(--green-bg); }
+      .section-icon.red-bg { background: var(--red-bg); }
+      .section-icon.yellow-bg { background: var(--yellow-bg); }
+
+      .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.01em;
+      }
+
+      .section-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-left: auto;
+        font-family: var(--font-mono);
+      }
+
+      .section-body {
+        padding: 0;
+      }
+
+      .section-body.padded {
+        padding: 20px 24px;
+      }
+
+      /* ===== TABLES ===== */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      thead th {
+        text-align: left;
+        padding: 12px 24px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        background: rgba(255,255,255,0.015);
+        border-bottom: 1px solid var(--border);
+      }
+
+      tbody td {
+        padding: 10px 24px;
+        border-bottom: 1px solid rgba(30,38,51,0.6);
+        font-size: 0.85rem;
+        vertical-align: middle;
+      }
+
+      tbody tr {
+        transition: background var(--transition);
+      }
+
+      tbody tr:hover {
+        background: var(--bg-card-hover);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      td.mono {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+
+      /* ===== BADGES ===== */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: var(--radius-pill);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+      }
+
+      .badge-found {
+        color: var(--green);
+        background: var(--green-bg);
+        border: 1px solid var(--green-border);
+      }
+
+      .badge-notfound {
+        color: var(--red);
+        background: var(--red-bg);
+        border: 1px solid var(--red-border);
+      }
+
+      .badge-unknown {
+        color: var(--yellow);
+        background: var(--yellow-bg);
+        border: 1px solid var(--yellow-border);
+      }
+
+      .badge-error {
+        color: var(--red);
+        background: var(--red-bg);
+        border: 1px solid var(--red-border);
+      }
+
+      .badge-safe {
+        color: var(--green);
+        background: var(--green-bg);
+        border: 1px solid var(--green-border);
+      }
+
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .badge-found .badge-dot { background: var(--green); }
+      .badge-notfound .badge-dot { background: var(--red); }
+      .badge-unknown .badge-dot { background: var(--yellow); }
+
+      /* ===== KEY-VALUE GRID ===== */
+      .kv-grid {
+        display: grid;
+        gap: 0;
+      }
+
+      .kv-row {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        border-bottom: 1px solid rgba(30,38,51,0.6);
+        transition: background var(--transition);
+      }
+
+      .kv-row:hover {
+        background: var(--bg-card-hover);
+      }
+
+      .kv-row:last-child {
+        border-bottom: none;
+      }
+
+      .kv-key {
+        padding: 10px 24px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+      }
+
+      .kv-value {
+        padding: 10px 24px;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        color: var(--text-primary);
+        word-break: break-word;
+      }
+
+      .kv-value.empty {
+        color: var(--text-muted);
+      }
+
+      /* ===== LINKS ===== */
+      a {
+        color: var(--accent-cyan);
+        text-decoration: none;
+        transition: color var(--transition);
+      }
+
+      a:hover {
+        color: var(--accent-purple);
+        text-decoration: underline;
+      }
+
+      /* ===== ERROR / INFO MESSAGES ===== */
+      .message-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px;
+        border-radius: var(--radius-sm);
+        font-size: 0.85rem;
+      }
+
+      .message-box.error {
+        background: var(--red-bg);
+        border: 1px solid var(--red-border);
+        color: var(--red);
+      }
+
+      .message-box.success {
+        background: var(--green-bg);
+        border: 1px solid var(--green-border);
+        color: var(--green);
+      }
+
+      /* ===== FOOTER ===== */
+      .report-footer {
+        text-align: center;
+        margin-top: 40px;
+        padding: 20px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        border-top: 1px solid var(--border);
+      }
+
+      .report-footer span {
+        font-family: var(--font-mono);
+      }
+
+      /* ===== EMPTY STATE ===== */
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 700px) {
+        .page-wrapper { padding: 16px 12px 48px; }
+        .report-header { padding: 20px; }
+        .header-top { flex-direction: column; }
+        .brand h1 { font-size: 1.3rem; }
+        .target-name { font-size: 1rem; }
+        .summary-bar { grid-template-columns: repeat(2, 1fr); }
+        .kv-row { grid-template-columns: 1fr; }
+        .kv-key { padding-bottom: 2px; }
+        .kv-value { padding-top: 2px; padding-bottom: 12px; }
+        thead th, tbody td { padding: 8px 14px; }
+        .section-header { padding: 14px 16px; }
+      }
+
+      @media (max-width: 420px) {
+        .summary-bar { grid-template-columns: 1fr; }
+        .stat-card { padding: 14px; }
+        .stat-value { font-size: 1.4rem; }
+      }
+
+      /* ===== URL COLUMN TRUNCATION ===== */
+      .url-cell {
+        max-width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+      }
+
+      @media (max-width: 700px) {
+        .url-cell { max-width: 180px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+
+      <!-- ===== HEADER ===== -->
+      <header class="report-header" id="report-header">
+        <div class="header-top">
+          <div class="brand">
+            <div class="brand-icon">👁</div>
+            <h1>PhantomTrace</h1>
+          </div>
+          <div class="edu-badge">
+            ⚠ OSINT Report — For Educational Use Only
+          </div>
+        </div>
+        <div class="target-name" id="target-name">{{ target_name }}</div>
+        <div class="timestamp">Generated {{ generated_at }}</div>
+      </header>
+
+      <!-- ===== SUMMARY BAR ===== -->
+      {% if summary %}
+      <div class="summary-bar" id="summary-bar">
+        <div class="stat-card">
+          <div class="stat-value accent">{{ summary.modules_run }}</div>
+          <div class="stat-label">Modules Run</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value muted">{{ summary.platforms_checked }}</div>
+          <div class="stat-label">Platforms Checked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green">{{ summary.profiles_found }}</div>
+          <div class="stat-label">Profiles Found</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value {% if summary.breaches_found > 0 %}red{% else %}green{% endif %}">{{ summary.breaches_found }}</div>
+          <div class="stat-label">Breaches Found</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value muted">{{ summary.dorks_generated }}</div>
+          <div class="stat-label">Dorks Generated</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ===== USERNAME CHECKER ===== -->
+      {% if username_results %}
+      <section class="section-card" id="section-username">
+        <div class="section-header">
+          <div class="section-icon cyan">🔍</div>
+          <div class="section-title">Username Check</div>
+          <div class="section-subtitle">{{ username_results|length }} platforms</div>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Profile URL</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in username_results %}
+              <tr>
+                <td>{{ item.platform }}</td>
+                <td class="url-cell"><a href="{{ item.url }}" target="_blank" rel="noopener">{{ item.url }}</a></td>
+                <td>
+                  {% if item.status is none %}
+                  <span class="badge badge-unknown"><span class="badge-dot"></span>Timeout</span>
+                  {% elif item.found %}
+                  <span class="badge badge-found"><span class="badge-dot"></span>Found</span>
+                  {% else %}
+                  <span class="badge badge-notfound"><span class="badge-dot"></span>Not Found</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ===== EMAIL BREACH CHECKER ===== -->
+      {% if email_results %}
+      <section class="section-card" id="section-email">
+        <div class="section-header">
+          <div class="section-icon red-bg">🛡</div>
+          <div class="section-title">Breach Check</div>
+          <div class="section-subtitle">
+            {% if email_results.error %}error{% elif email_results.breaches %}{{ email_results.breaches|length }} found{% else %}clean{% endif %}
+          </div>
+        </div>
+        <div class="section-body padded">
+          {% if email_results.error %}
+          <div class="message-box error">
+            <span class="badge badge-error"><span class="badge-dot"></span>Error</span>
+            <span>{{ email_results.error }}</span>
+          </div>
+          {% elif email_results.breaches|length == 0 %}
+          <div class="message-box success">
+            <span class="badge badge-safe"><span class="badge-dot"></span>Clean</span>
+            <span>No breaches found for this email address.</span>
+          </div>
+          {% else %}
+          </div><div class="section-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Breach</th>
+                <th>Domain</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for breach in email_results.breaches %}
+              <tr>
+                <td>{{ breach.Name }}</td>
+                <td class="mono">{{ breach.Domain }}</td>
+                <td class="mono">{{ breach.BreachDate }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ===== EXIF METADATA ===== -->
+      {% if exif_results %}
+      <section class="section-card" id="section-exif">
+        <div class="section-header">
+          <div class="section-icon purple">📷</div>
+          <div class="section-title">EXIF Metadata</div>
+          <div class="section-subtitle">image analysis</div>
+        </div>
+        <div class="section-body">
+          {% if exif_results.error %}
+          <div class="section-body padded">
+            <div class="message-box error">
+              <span class="badge badge-error"><span class="badge-dot"></span>Error</span>
+              <span>{{ exif_results.error }}</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="kv-grid">
+            <div class="kv-row">
+              <div class="kv-key">Camera Make</div>
+              <div class="kv-value {% if not exif_results.camera_make %}empty{% endif %}">{{ exif_results.camera_make or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Camera Model</div>
+              <div class="kv-value {% if not exif_results.camera_model %}empty{% endif %}">{{ exif_results.camera_model or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Software</div>
+              <div class="kv-value {% if not exif_results.software %}empty{% endif %}">{{ exif_results.software or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Date Original</div>
+              <div class="kv-value {% if not exif_results.datetime_original %}empty{% endif %}">{{ exif_results.datetime_original or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Date Time</div>
+              <div class="kv-value {% if not exif_results.datetime %}empty{% endif %}">{{ exif_results.datetime or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">GPS Latitude</div>
+              <div class="kv-value {% if not exif_results.gps_latitude %}empty{% endif %}">{{ exif_results.gps_latitude or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">GPS Longitude</div>
+              <div class="kv-value {% if not exif_results.gps_longitude %}empty{% endif %}">{{ exif_results.gps_longitude or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">GPS Altitude</div>
+              <div class="kv-value {% if not exif_results.gps_altitude %}empty{% endif %}">{{ exif_results.gps_altitude or "—" }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ===== WHOIS LOOKUP ===== -->
+      {% if whois_results %}
+      <section class="section-card" id="section-whois">
+        <div class="section-header">
+          <div class="section-icon green-bg">🌐</div>
+          <div class="section-title">WHOIS Lookup</div>
+          <div class="section-subtitle">domain intel</div>
+        </div>
+        <div class="section-body">
+          {% if whois_results.error %}
+          <div class="section-body padded">
+            <div class="message-box error">
+              <span class="badge badge-error"><span class="badge-dot"></span>Error</span>
+              <span>{{ whois_results.error }}</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="kv-grid">
+            <div class="kv-row">
+              <div class="kv-key">Domain Name</div>
+              <div class="kv-value {% if not whois_results.domain_name %}empty{% endif %}">{{ whois_results.domain_name or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Registrar</div>
+              <div class="kv-value {% if not whois_results.registrar %}empty{% endif %}">{{ whois_results.registrar or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Creation Date</div>
+              <div class="kv-value {% if not whois_results.creation_date %}empty{% endif %}">{{ whois_results.creation_date or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Expiration Date</div>
+              <div class="kv-value {% if not whois_results.expiration_date %}empty{% endif %}">{{ whois_results.expiration_date or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Updated Date</div>
+              <div class="kv-value {% if not whois_results.updated_date %}empty{% endif %}">{{ whois_results.updated_date or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Name Servers</div>
+              <div class="kv-value {% if not whois_results.name_servers %}empty{% endif %}">{{ whois_results.name_servers or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Status</div>
+              <div class="kv-value {% if not whois_results.status %}empty{% endif %}">{{ whois_results.status or "—" }}</div>
+            </div>
+            <div class="kv-row">
+              <div class="kv-key">Emails</div>
+              <div class="kv-value {% if not whois_results.emails %}empty{% endif %}">{{ whois_results.emails or "—" }}</div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ===== GOOGLE DORKS ===== -->
+      {% if dork_results %}
+      <section class="section-card" id="section-dorks">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">🔗</div>
+          <div class="section-title">Google Dorks</div>
+          <div class="section-subtitle">{{ dork_results|length }} queries</div>
+        </div>
+        <div class="section-body">
+          <table>
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th style="width: 100px; text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in dork_results %}
+              <tr>
+                <td class="mono">{{ item.query }}</td>
+                <td style="text-align: center;"><a href="{{ item.url }}" target="_blank" rel="noopener">Search ↗</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- ===== FOOTER ===== -->
+      <footer class="report-footer">
+        <span>PhantomTrace</span> · OSINT Footprinting Tool · Generated <span>{{ generated_at }}</span>
+        <br />This report is for educational and authorized security research purposes only.
+      </footer>
+
+    </div>
+  </body>
+</html>

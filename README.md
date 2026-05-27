@@ -5,7 +5,7 @@ PhantomTrace aggregates public information for a name, username, email, image, o
 **Ethical use disclaimer:** This tool is for lawful, authorized security research and personal data audits only. Do not use it to target individuals, invade privacy, or violate any terms of service or laws. You are responsible for how you use it.
 
 ## Features
-- Username checker across 50+ platforms (async HTTP HEAD).
+- Username checker across 40+ platforms (async HTTP GET with body text inspection and redirect validation to eliminate false positives).
 - Email breach lookup via HaveIBeenPwned API v3.
 - EXIF metadata extraction for images (GPS, device, timestamps).
 - WHOIS lookup for domains.
@@ -14,8 +14,8 @@ PhantomTrace aggregates public information for a name, username, email, image, o
 
 ## Setup
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -28,7 +28,7 @@ Fill in your HaveIBeenPwned API key and user agent in `.env`.
 
 ## Usage
 ```bash
-python main.py --username johndoe --email johndoe@example.com --domain example.com --image samples/photo.jpg --dork "John Doe" --output output/report.html
+python main.py --username johndoe --email johndoe@example.com --domain example.com --image samples/photo.jpg --dork "John Doe"
 ```
 
 Run multiple modules with `--all` (only those with inputs provided will execute):
@@ -36,5 +36,19 @@ Run multiple modules with `--all` (only those with inputs provided will execute)
 python main.py --all --username johndoe --email johndoe@example.com --domain example.com
 ```
 
-## Output
-The HTML report is written to the `--output` path (default: `output/report.html`).
+## Folder Structure & Output
+
+### Folders
+- **`samples/`**: Put local target files (e.g. photos/images for EXIF extraction) here for scanning. The contents of this folder are ignored by Git (`.gitignore`) to keep your target files private.
+- **`output/`**: The generated HTML reports are written here. Like `samples/`, its contents are ignored by Git.
+
+### Report Name Format
+Unless an output path is explicitly provided via the `--output` parameter, the report is automatically saved in `output/` with a dynamic filename based on the scan inputs:
+- **If Username is checked**: `report [username: <username>].html`
+- **If Email is checked (and no username)**: `report [email: <email>].html`
+- **If Domain is checked (and no username/email)**: `report [domain: <domain>].html`
+- **If Dork target is checked (and no username/email/domain)**: `report [name: <dork_query>].html`
+- **Fallback**: `report.html`
+
+### Timezone & Formatting
+The report contains a header bar showing the generation time in **Indian Standard Time (IST)**. All dates in the report are formatted as **dd-mm-yyyy** (e.g., `27-05-2026`).

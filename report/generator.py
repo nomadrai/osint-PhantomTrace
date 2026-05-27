@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -59,7 +59,7 @@ def generate_report(
         **results,
         target_name=target_name or "Unknown Target",
         summary=summary,
-        generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        generated_at=datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d-%m-%Y %H:%M:%S IST"),
     )
 
     out_dir = os.path.dirname(output_path)

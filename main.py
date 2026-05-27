@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output",
-        default=os.path.join("output", "report.html"),
+        default=None,
         help="Output HTML report path",
     )
     return parser.parse_args()
@@ -86,7 +86,22 @@ def main() -> None:
         return
 
     target_name = _build_target_name(args)
-    output_path = generate_report(results, args.output, target_name=target_name)
+
+    output_path = args.output
+    if not output_path:
+        if args.username:
+            filename = f"report [username: {args.username}].html"
+        elif args.email:
+            filename = f"report [email: {args.email}].html"
+        elif args.domain:
+            filename = f"report [domain: {args.domain}].html"
+        elif args.dork:
+            filename = f"report [name: {args.dork}].html"
+        else:
+            filename = "report.html"
+        output_path = os.path.join("output", filename)
+
+    output_path = generate_report(results, output_path, target_name=target_name)
     print(f"Report written to {output_path}")
 
 

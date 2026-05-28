@@ -36,7 +36,12 @@ PLATFORMS = [
     {
         "name": "Twitter/X",
         "url": "https://x.com/{username}",
-        "method": "status",
+        "method": "body",
+        "not_found": [
+            "Sorry, that page doesn",
+            "This account doesn’t exist",
+            "Try searching for another.",
+        ],
     },
     {
         "name": "Instagram",
@@ -54,6 +59,7 @@ PLATFORMS = [
         "method": "body",
         "not_found": [
             "The page you requested was not found",
+            "This content isn't available at the moment",
             "This content isn",
             "page_not_found",
             "This Page Isn",
@@ -76,16 +82,6 @@ PLATFORMS = [
         "method": "status",
     },
     {
-        "name": "Twitch",
-        "url": "https://www.twitch.tv/{username}",
-        "method": "body",
-        "not_found": [
-            "sorry. unless you've got a time machine",
-            "that page is dead",
-            "This channel is unavailable",
-        ],
-    },
-    {
         "name": "TikTok",
         "url": "https://www.tiktok.com/@{username}",
         "method": "body",
@@ -93,16 +89,6 @@ PLATFORMS = [
             "Couldn't find this account",
             "couldn&#x27;t find this account",
             "user-not-found",
-        ],
-    },
-    {
-        "name": "Pinterest",
-        "url": "https://www.pinterest.com/{username}/",
-        "method": "body",
-        "not_found": [
-            "User not found",
-            "Sorry! We couldn",
-            "Not Found",
         ],
     },
     {
@@ -132,23 +118,15 @@ PLATFORMS = [
         "not_found": ["No such user."],
     },
     {
-        "name": "Pastebin",
-        "url": "https://pastebin.com/u/{username}",
-        "method": "status",
-    },
-    {
         "name": "Keybase",
         "url": "https://keybase.io/{username}",
-        "method": "status",
+        "method": "body",
+        "not_found": ["Sorry, what you are looking for...it does not exist.",
+                      "Oy!"],
     },
     {
         "name": "CodePen",
         "url": "https://codepen.io/{username}",
-        "method": "status",
-    },
-    {
-        "name": "Kaggle",
-        "url": "https://www.kaggle.com/{username}",
         "method": "status",
     },
     {
@@ -180,15 +158,6 @@ PLATFORMS = [
         "name": "Flickr",
         "url": "https://www.flickr.com/people/{username}",
         "method": "status",
-    },
-    {
-        "name": "Steam",
-        "url": "https://steamcommunity.com/id/{username}",
-        "method": "body",
-        "not_found": [
-            "The specified profile could not be found",
-            "error_ctn",
-        ],
     },
     {
         "name": "DeviantArt",
@@ -229,14 +198,27 @@ PLATFORMS = [
         ],
     },
     {
-        "name": "Imgur",
-        "url": "https://imgur.com/user/{username}",
-        "method": "status",
+        "name": "Twitch",
+        "url": "https://www.twitch.tv/{username}",
+        "method": "body",
+        "not_found": [
+            "Sorry. Unless you've got a time machine",
+            "that page is in another castle",
+            "404",
+        ],
     },
     {
-        "name": "Spotify",
-        "url": "https://open.spotify.com/user/{username}",
-        "method": "status",
+        "name": "Steam",
+        "url": "https://steamcommunity.com/id/{username}",
+        "method": "body",
+        "not_found": [
+            "Error",
+            "The specified profile could not be found.",
+            "Sorry!",
+            "An error was encountered while processing your request:",
+            "profile could not be found",
+            "error_ctn",
+        ],
     },
     {
         "name": "WordPress",
@@ -251,12 +233,12 @@ PLATFORMS = [
     {
         "name": "Patreon",
         "url": "https://www.patreon.com/{username}",
-        "method": "status",
-    },
-    {
-        "name": "PyPI",
-        "url": "https://pypi.org/user/{username}",
-        "method": "status",
+        "method": "body",
+        "not_found": [
+            "Sorry, we couldn&#8217;t find that page.",
+            "Sorry, we couldn't find that page.",
+            "Page not found",
+        ],
     },
     {
         "name": "Docker Hub",
@@ -286,7 +268,8 @@ PLATFORMS = [
     {
         "name": "Codeforces",
         "url": "https://codeforces.com/profile/{username}",
-        "method": "status",
+        "method": "body",
+        "not_found": ["User not found", "No such user"],
     },
     {
         "name": "Chess.com",

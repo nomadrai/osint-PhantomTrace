@@ -1,11 +1,13 @@
 # PhantomTrace — OSINT Footprinting Tool
 
-PhantomTrace aggregates public information for a name, username, email, image, or domain and generates a dark-themed HTML report.
+PhantomTrace aggregates public information for a name, username, email, image, or domain and generates a HTML report.
 
 **Ethical use disclaimer:** This tool is for lawful, authorized security research and personal data audits only. Do not use it to target individuals, invade privacy, or violate any terms of service or laws. You are responsible for how you use it.
 
+![PhantomTrace report preview](assets/phantomtrace-report.png)
+
 ## Features
-- Username checker across 40+ platforms (async HTTP GET with body text inspection and redirect validation to eliminate false positives).
+- Username checker across 35+ platforms (async HTTP GET with body text inspection and redirect validation to eliminate false positives).
 - Email breach lookup via HaveIBeenPwned API v3.
 - EXIF metadata extraction for images (GPS, device, timestamps).
 - WHOIS lookup for domains.
@@ -49,6 +51,3 @@ Unless an output path is explicitly provided via the `--output` parameter, the r
 - **If Domain is checked (and no username/email)**: `report [domain: <domain>].html`
 - **If Dork target is checked (and no username/email/domain)**: `report [name: <dork_query>].html`
 - **Fallback**: `report.html`
-
-### Timezone & Formatting
-The report contains a header bar showing the generation time in **Indian Standard Time (IST)**. All dates in the report are formatted as **dd-mm-yyyy** (e.g., `27-05-2026`).

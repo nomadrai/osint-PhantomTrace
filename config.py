@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import os
 from typing import Optional
 
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 
 

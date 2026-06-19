@@ -5,3 +5,4 @@ __pycache__/
 venv/
 implementation_plan.md
 PROJECT_REPORT.md
+.vscode/

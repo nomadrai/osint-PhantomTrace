@@ -7,12 +7,14 @@ PhantomTrace aggregates public information for a name, username, email, image, o
 ![PhantomTrace report preview](assets/phantomtrace-report.png)
 
 ## Features
-- Username checker across 35+ platforms (async HTTP GET with body text inspection and redirect validation to eliminate false positives).
-- Email breach lookup via HaveIBeenPwned API v3.
-- EXIF metadata extraction for images (GPS, device, timestamps).
-- WHOIS lookup for domains.
-- Google dork generator (opens searches in browser).
-- HTML report generation (Jinja2, dark theme).
+- **Username checker** across 38 platforms (async `aiohttp` requests using per-platform detection — HTTP status code or response-body inspection — to reduce false positives).
+- **Email breach lookup** via the HaveIBeenPwned API v3 (requires an API key).
+- **EXIF metadata extraction** for images, including GPS coordinates, camera/device info, and timestamps.
+- **WHOIS lookup** for domains (registrar, creation/expiration/updated dates, name servers, status, contact emails).
+- **Google dork generator** that builds targeted search queries and can open them in your browser.
+- **HTML report generation** (Jinja2, dark theme) with a summary of modules run, platforms checked, profiles found, breaches, and dorks generated.
+
+Each run assembles the results of the modules you invoke into a single self-contained HTML report.
 
 ## Setup
 ```bash
@@ -37,6 +39,18 @@ Run multiple modules with `--all` (only those with inputs provided will execute)
 ```bash
 python main.py --all --username johndoe --email johndoe@example.com --domain example.com
 ```
+
+### CLI options
+| Flag | Description |
+| --- | --- |
+| `--username` | Username to check across platforms |
+| `--email` | Email address for breach lookup |
+| `--image` | Image path for EXIF extraction |
+| `--domain` | Domain for WHOIS lookup |
+| `--dork` | Target name/domain for Google dorks |
+| `--all` | Run all modules for which inputs are provided |
+| `--open-dorks` | Open the generated dork URLs in your default browser |
+| `--output` | Explicit output path for the HTML report |
 
 ## Folder Structure & Output
 

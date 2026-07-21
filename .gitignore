@@ -6,3 +6,5 @@ venv/
 implementation_plan.md
 PROJECT_REPORT.md
 .vscode/
+output/
+samples/
